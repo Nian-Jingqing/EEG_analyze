@@ -80,7 +80,8 @@ DURATION_RESPONSE_SAMPLES = Fs*1;
         for iich = 1:TotalChannels
           subplot(2,4,iich)
           axis([1 size(AllEvokedOn,2) yscale*[-1 1]]);
-          text(0.8*max(xlim), 0.9*max(ylim), sprintf('ch %d',iich))
+          text(0.99*max(xlim), 0.99*max(ylim), sprintf('ch %d',iich),'HorizontalAlignment','right','VerticalAlignment','top')
+          text(0.99*max(xlim), 0.99*min(ylim), sprintf('on (black), off (red)'),'HorizontalAlignment','right','VerticalAlignment','bottom')
           if (iich == 5), xlabel('Trial time (samples)'); end
           if (iich == 5), ylabel('Response (uV)'); end
           if (iich == 1), title(sprintf('Sub: %s; Stim: %d',Subjects{sub},ixstim)); end
