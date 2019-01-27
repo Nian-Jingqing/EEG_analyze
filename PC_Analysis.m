@@ -1,7 +1,7 @@
 %           Author: Anany Dwivedi
-%           Date  : Oct-05-18
+%           Date  : Oct-12-18
 %           The University of Auckland
-%      This is a script to process circular arc stimulus
+%      This is a script to perform PC Analysis on the Evoked Response
 %% File Setup
 clc;
 clear all;
@@ -14,8 +14,9 @@ addpath('myEEG_lib\');              %Path to User Defined Functions
 MainFolder = {'Data'};
 SubFolder = {'20180525'};
 Subjects = {'LH','YJ'};
+Subjects = {'YJ'};
 FirstFile = 1;
-LastFile = 20;
+LastFile = 10;
 
 FileToBeProcessed = FirstFile:LastFile;             %File Numbers
 NumFiles = length(FileToBeProcessed);
@@ -42,6 +43,7 @@ SubjectItr = NumFiles*NumTriggers*TotalChannels;
 
 TotalItrCompleted = 0;
 SubjectItrCompleted = 0;
+Acc_subj = [];
 for sub = 1:length(Subjects)
     SubjectItrCompleted = 0;
 DURATION_RESPONSE_SAMPLES = Fs*1;
@@ -59,39 +61,41 @@ DURATION_RESPONSE_SAMPLES = Fs*1;
         
         for i = 1:length(Trigger)
             for ch = 1:TotalChannels
-
                 AllEvokedOn(idx,:,ch) = Data(Trigger(i):(Trigger(i)+DURATION_RESPONSE_SAMPLES-1),ch);
                 AllEvokedOff(idx,:,ch) = Data((Trigger(i)-Fs*DurationStim_s):((Trigger(i)-Fs*DurationStim_s)+DURATION_RESPONSE_SAMPLES-1),ch);
                 
                 TotalItrCompleted = TotalItrCompleted + 1;
                 SubjectItrCompleted = SubjectItrCompleted + 1;
-                clc;
-                fprintf('Processing File: %s\n',FileName);
-                fprintf('Process Completion for %s:  %.2f%%\n',Subjects{sub},(SubjectItrCompleted/SubjectItr)*100);
-                fprintf('Completion of the Script: %.2f%%\n',(TotalItrCompleted/TotalItr)*100);
-            end
+                processInfo(FileName,Subjects{sub},SubjectItrCompleted,SubjectItr,TotalItrCompleted,TotalItr)
+                end
             idx = idx + 1;
         end % trigger
     end % files
 
-    for ixstim = 1:4
-        figure; hold on
-        subplot(2,4,1);
-        yscale = 0;
-        for iich = 1:TotalChannels
-          subplot(2,4,iich)
-          plot(mean(AllEvokedOn((ixstim:4:size(AllEvokedOn,1)),:,iich),1),'-k'); axis square; hold on; axis([1 size(AllEvokedOn,2) max(abs(ylim))*[-1 1]]);
-          plot(mean(AllEvokedOff((ixstim:4:size(AllEvokedOff,1)),:,iich),1),'-r'); axis square
-          if (max(abs(ylim)) > yscale), yscale = max(abs(ylim)); end
-        end
-        for iich = 1:TotalChannels
-          subplot(2,4,iich)
-          axis([1 size(AllEvokedOn,2) yscale*[-1 1]]);
-          text(0.8*max(xlim), 0.9*max(ylim), sprintf('ch %d',iich))
-          if (iich == 5), xlabel('Trial time (samples)'); end
-          if (iich == 5), ylabel('Response (uV)'); end
-          if (iich == 1), title(sprintf('Sub: %s; Stim: %d',Subjects{sub},ixstim)); end
-        end
+    Acc_comp = [];
+    d = {AllEvokedOn(:,:,1),AllEvokedOn(:,:,2),AllEvokedOn(:,:,3),AllEvokedOn(:,:,4),...
+        AllEvokedOn(:,:,5),AllEvokedOn(:,:,6),AllEvokedOn(:,:,7),AllEvokedOn(:,:,8)};
+    figure
+    for pc = 2:240
+        Acc = AnalysePCA(d,pc,1);
+        Acc_comp = [Acc_comp;Acc];
+        clf
+        plot(2:pc,Acc_comp,'*k','MarkerSize',4)
+        hold on; 
+        plot(0:pc,ones(pc+1,1)*25,'--r')
+        axis([0 pc 0 100])
+        pause(0.1);
     end
+    figure,plot(2:240,Acc_comp,'*k','MarkerSize',4);hold on; plot(0:240,ones(240,1)*25,'--r')
+    axis([0 240 0 100])
+    Acc_subj = [Acc_subj Acc_comp];
 end % subject
+
+
+
+
+
+
+
+
 
